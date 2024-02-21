@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ol Map</title>
+    <link rel="stylesheet" href="openlayers/openlayers.css">
+
+    <style>
+        body {
+            margin: 0;
+        }
+
+        .map {
+            height: 100vh;
+            width: 100%;
+        }
+
+        .map .popup {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="map" class="map"></div>
+
+    <script src="openlayers/openlayers.js"></script>
+
+    <script>
+        window.onload = function () {
+            initMap();
+        };
+
+        function initMap() {
+            var longitude = [10.0, 10.1, 10.2];
+            var latitude = [50.0, 50.1, 50.2];
+            var data = [
+                "Service Man: John<br>Complaint Name: Water Leakage<br>Complaint No: 001<br>Event: Repair<br>Date: 2024-02-20",
+                "Service Man: Alice<br>Complaint Name: Power Outage<br>Complaint No: 002<br>Event: Fix<br>Date: 2024-02-21",
+                "Service Man: Bob<br>Complaint Name: Internet Connectivity<br>Complaint No: 003<br>Event: Troubleshoot<br>Date: 2024-02-22"
+            ];
+
+            var map = new ol.Map({
+                target: 'map',
+                layers: [
+                    new ol.layer.Tile({
+                        source: new ol.source.OSM()
+                    })
+                ],
+                view: new ol.View({
+                    center: ol.proj.fromLonLat([longitude[0], latitude[0]]),
+                    zoom: 10
+                })
+            });
+
+            for (var i = 0; i < longitude.length; i++) {
+                var circle = new ol.style.Style({
+                    image: new ol.style.Circle({
+                        radius: 10,
+                        fill: new ol.style.Fill({ color: '#fc843f' }),
+                        stroke: new ol.style.Stroke({
+                            color: '#fc843f',
+                            width: 4
+                        })
+                    }),
+                    text: new ol.style.Text({
+                        font: '15px Verdana',
+                        text: (i + 1).toString(),
+                        fill: new ol.style.Fill({
+                            color: '#333030'
+                        })
+                    })
+                });
+
+                var layer = new ol.layer.Vector({
+                    source: new ol.source.Vector({
+                        features: [
+                            new ol.Feature({
+                                geometry: new ol.geom.Point(ol.proj.fromLonLat([longitude[i], latitude[i]])),
+                                name: data[i]
+                            })
+                        ]
+                    })
+                });
+                layer.setStyle(circle);
+                map.addLayer(layer);
+            }
+
+            var element = document.createElement('div');
+            element.className = 'popup';
+            var popup = new ol.Overlay({
+                element: element,
+                positioning: 'bottom-center',
+                stopEvent: false
+            });
+            map.addOverlay(popup);
+
+            map.on('click', function (evt) {
+                var feature = map.forEachFeatureAtPixel(evt.pixel,
+                    function (feature) {
+                        return feature;
+                    });
+                if (feature) {
+                    var iname = feature.get('name');
+                    var coordinates = feature.getGeometry().getCoordinates();
+                    popup.setPosition(coordinates);
+                    element.innerHTML = iname;
+                } else {
+                    popup.setPosition(undefined);
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
